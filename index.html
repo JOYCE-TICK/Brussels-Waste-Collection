@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Bruxelles — sortie des sacs</title>
+<link rel="stylesheet" href="vendor/leaflet.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="titles">
+      <span class="badge">🗑️</span>
+      <div class="titles-text">
+        <h1>Bruxelles — jours de sortie des sacs</h1>
+        <p>Cherchez une rue ou touchez-la sur la carte pour voir quand sortir vos sacs.</p>
+      </div>
+    </div>
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Chercher une rue…" autocomplete="off"/>
+      <div id="suggestions"></div>
+    </div>
+  </header>
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="detail-panel" role="dialog" aria-label="Détail de la rue">
+      <button id="detail-close" aria-label="Fermer">✕</button>
+      <div id="detail-name"></div>
+      <div id="detail-commune"></div>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+</div>
+<script src="vendor/leaflet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
