@@ -12,15 +12,39 @@ async function boot() {
     'font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:0.9rem;z-index:7000;';
   document.getElementById('map-wrap').appendChild(loader);
   try {
-    const res = await fetch('data/collectes.json');
+    const res = await fetch('data/index.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     DATA = await res.json();
+    DATA.features = [];
+    addFeatures = main();
+    await loadCommunes(loader);
     loader.remove();
-    main();
   } catch (err) {
     loader.textContent = 'Impossible de charger les données (' + err.message + ')';
     loader.style.background = '#e34948';
   }
+}
+
+let addFeatures = null; // set by main(): draws a commune's streets and indexes them for search
+
+async function loadCommunes(loader) {
+  let done = 0;
+  const total = DATA.communes.length;
+  loader.textContent = 'Chargement des communes… 0/' + total;
+  await Promise.all(DATA.communes.map(async (c) => {
+    try {
+      const res = await fetch('data/' + c.file);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const payload = await res.json();
+      DATA.features.push(...payload.features);
+      addFeatures(payload.features);
+    } catch (err) {
+      console.error('Commune ' + c.name + ':', err);
+    } finally {
+      done++;
+      loader.textContent = 'Chargement des communes… ' + done + '/' + total;
+    }
+  }));
 }
 
 function main() {
@@ -106,7 +130,7 @@ swapTiles();
 
 const streetLayer = L.layerGroup().addTo(map);
 const layersByKey = {};
-const featuresByKey = new Map(DATA.features.map(f => [f.name + '||' + f.commune, f]));
+const featuresByKey = new Map(); // filled commune by commune as data arrives
 
 // --- detail panel: tap/click a street to see its schedule. Bottom sheet on
 // narrow screens, small floating card on wide ones (see CSS) — the hover
@@ -168,7 +192,10 @@ detailClose.addEventListener('click', closeDetail);
 function drawStreets() {
   streetLayer.clearLayers();
   const colors = isDark() ? DATA.day_color_dark : DATA.day_color_light;
-  for (const f of DATA.features) {
+  for (const f of DATA.features) drawFeature(f, colors);
+}
+
+function drawFeature(f, colors) {
     const group = [];
     for (const seg of f.segments) {
       const color = seg.has_data ? (colors[seg.days[0]] || 'var(--unmatched)') : null;
@@ -190,7 +217,6 @@ function drawStreets() {
       group.push({ line, hasData: seg.has_data, seg });
     }
     layersByKey[f.name + '||' + f.commune] = group;
-  }
 }
 
 function buildLegend() {
@@ -235,9 +261,18 @@ function foldAccents(s) {
   return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 }
 
-const entries = DATA.features
-  .map(f => ({ name: f.name, commune: f.commune, key: f.name + '||' + f.commune, folded: foldAccents(f.name) }))
-  .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+const entries = []; // filled commune by commune as data arrives
+
+function addCommuneFeatures(features) {
+  const colors = isDark() ? DATA.day_color_dark : DATA.day_color_light;
+  for (const f of features) {
+    const key = f.name + '||' + f.commune;
+    featuresByKey.set(key, f);
+    drawFeature(f, colors);
+    entries.push({ name: f.name, commune: f.commune, key, folded: foldAccents(f.name) });
+  }
+  entries.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+}
 
 function showSuggestions(query) {
   const q = foldAccents(query.trim());
@@ -278,6 +313,7 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
+return addCommuneFeatures;
 } // main
 
 boot();

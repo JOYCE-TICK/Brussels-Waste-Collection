@@ -14,7 +14,8 @@ it on the map to see the schedule per bag type.
 | `index.html` | page shell |
 | `css/style.css` | app styles (light + dark via `prefers-color-scheme`) |
 | `js/app.js` | Leaflet map, street rendering (canvas), search, detail panel |
-| `data/collectes.json` | the dataset: 5 599 streets, per-segment geometry + collection days + schedule text + sacs verts dates |
+| `data/index.json` | small manifest: map bounds, day colors, stats, list of commune files |
+| `data/communes/*.json` | the dataset split per commune (19 files, 0.2–3.4 MB): per-segment geometry + collection days + schedule text + sacs verts dates |
 | `vendor/` | Leaflet 1.9.4, vendored (no CDN dependency) |
 | `harvester/` | Python script(s) that query the Recycle! API (api.fostplus.be) used by recycleapp.be to (re)build the dataset |
 
@@ -25,10 +26,10 @@ they are blocked (ad blockers commonly block cartocdn.com).
 
 Schedules come from the Recycle! platform (Fost Plus), the same source
 recycleapp.be uses. Street geometries are matched OpenStreetMap/UrbIS street
-axes. Schedules change rarely; regenerate `data/collectes.json` with the
+axes. Schedules change rarely; regenerate the `data/` files with the
 harvester a few times a year.
 
-`data/collectes.json` schema (abridged):
+Data schema (abridged — `index.json` holds everything except `features`, which live in the per-commune files):
 
 ```json
 {
@@ -37,6 +38,7 @@ harvester a few times a year.
   "day_color_light": {"lundi": "#..."},
   "day_color_dark":  {"lundi": "#..."},
   "stats": {"matched": 0, "total": 0, "communes": 19, "split": 0},
+  "communes": [{"name": "Anderlecht", "file": "communes/anderlecht.json", "streets": 508}],
   "features": [
     {
       "name": "Boulevard Louis Mettewie",
