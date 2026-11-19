@@ -19,8 +19,9 @@ it on the map to see the schedule per bag type.
 | `vendor/` | Leaflet 1.9.4, vendored (no CDN dependency) |
 | `harvester/` | Python script(s) that query the Recycle! API (api.fostplus.be) used by recycleapp.be to (re)build the dataset |
 
-The basemap tries CARTO tiles first and falls back to plain OpenStreetMap if
-they are blocked (ad blockers commonly block cartocdn.com).
+The basemap uses Esri's keyless light/dark grey canvas tiles and falls back to
+plain OpenStreetMap if they are blocked. (CARTO tiles were dropped: they now
+require an API key.)
 
 ## Data
 

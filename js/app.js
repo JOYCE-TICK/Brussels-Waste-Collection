@@ -53,19 +53,20 @@ function isDark() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-// Tile providers to try in order. CARTO is preferred (light/dark variants,
-// nicer cartography), but some ad blockers / privacy extensions / DNS
-// filters block cartocdn.com specifically, leaving every tile as a broken
-// image. If CARTO tiles fail outright, fall back to plain OpenStreetMap
-// tiles (a different domain, only one style, but far less commonly
-// blocked); if that fails too, show a clear message instead of silently
+// Tile providers to try in order — keyless only (CARTO now demands an API
+// key and paints "api key required" on every tile). Esri's grey canvases
+// need no key, have light AND dark variants, and their muted look suits a
+// map whose real content is the coloured street overlay. Native tiles stop
+// at z16; maxNativeZoom upscales them beyond that. If Esri fails (blocked
+// network), fall back to plain OpenStreetMap tiles (different domain, one
+// style only); if that fails too, show a clear message instead of silently
 // tiling broken-image icons.
 const TILE_SOURCES = [
   {
-    light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    subdomains: 'abcd',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    light: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    maxNativeZoom: 16,
+    attribution: 'Tiles &copy; Esri — Esri, HERE, Garmin &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   },
   {
     light: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -100,7 +101,12 @@ function showBasemapWarning() {
 function buildTileLayer() {
   const src = TILE_SOURCES[tileSourceIndex];
   const url = isDark() ? src.dark : src.light;
-  const layer = L.tileLayer(url, { attribution: src.attribution, subdomains: src.subdomains, maxZoom: 20 });
+  const layer = L.tileLayer(url, {
+    attribution: src.attribution,
+    subdomains: src.subdomains || 'abc',
+    maxZoom: 20,
+    maxNativeZoom: src.maxNativeZoom || 19,
+  });
   tileLoadCount = 0;
   tileErrorCount = 0;
   layer.on('tileload', () => { tileLoadCount++; });
