@@ -54,25 +54,29 @@ function isDark() {
 }
 
 // Tile providers to try in order — keyless only (CARTO now demands an API
-// key and paints "api key required" on every tile). Esri's grey canvases
-// need no key, have light AND dark variants, and their muted look suits a
-// map whose real content is the coloured street overlay. Native tiles stop
-// at z16; maxNativeZoom upscales them beyond that. If Esri fails (blocked
-// network), fall back to plain OpenStreetMap tiles (different domain, one
-// style only); if that fails too, show a clear message instead of silently
-// tiling broken-image icons.
+// key, and Esri's grey canvases have no street names and stop at z16, so
+// they go blurry zoomed in). OpenStreetMap standard tiles have street
+// names, are sharp to z19 and need no key; in dark mode the same tiles are
+// recoloured with a CSS invert filter (darkFilter → .dark-tiles in
+// style.css). OSM France is the fallback (different domain, also z20, in
+// case tile.openstreetmap.org is blocked); if that fails too, show a clear
+// message instead of silently tiling broken-image icons.
 const TILE_SOURCES = [
-  {
-    light: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-    dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-    maxNativeZoom: 16,
-    attribution: 'Tiles &copy; Esri — Esri, HERE, Garmin &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  },
   {
     light: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     dark: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    darkFilter: true,
+    maxNativeZoom: 19,
     subdomains: 'abc',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  },
+  {
+    light: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+    dark: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+    darkFilter: true,
+    maxNativeZoom: 20,
+    subdomains: 'abc',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | OSM France',
   },
 ];
 
@@ -106,6 +110,7 @@ function buildTileLayer() {
     subdomains: src.subdomains || 'abc',
     maxZoom: 20,
     maxNativeZoom: src.maxNativeZoom || 19,
+    className: (isDark() && src.darkFilter) ? 'dark-tiles' : '',
   });
   tileLoadCount = 0;
   tileErrorCount = 0;

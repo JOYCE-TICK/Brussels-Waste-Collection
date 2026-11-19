@@ -92,3 +92,9 @@
     header .titles p { display: none; }
     .leaflet-control.legend { max-width: 160px; font-size: 0.72rem; }
   }
+
+/* Dark mode: OSM has no dark tile style, so recolour the standard tiles.
+   Invert + hue-rotate keeps hues roughly correct (water stays blue). */
+.dark-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.55);
+}
